@@ -57,7 +57,18 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+    distribution = {}
+
+    in_page_prob = damping_factor / len(corpus[page])
+    global_prob = (1 - damping_factor) / len(corpus)
+
+    for link in corpus:
+        distribution[link] = global_prob
+
+    for link in corpus[page]:
+        distribution[link] = in_page_prob
+
+    return distribution
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,7 +80,20 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    pagerank = {page : 0 for page in corpus}
+
+    pages = list(page for page in corpus)
+    page = random.choice(pages)
+
+    for _ in range(n-1):
+        pagerank[page] += 1
+        prob_distribution = transition_model(corpus, page, damping_factor)
+        page = random.choices(tuple(prob_distribution.keys()), tuple(prob_distribution.values()), k=1)[0]
+    
+    for page in pagerank:
+        pagerank[page] *= 1 / n
+    print(transition_model(corpus, page, damping_factor))
+    return pagerank
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -81,7 +105,33 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    N = len(corpus)
+    v = 1 / N
+    b_prob = (1 - damping_factor) / N
+    pagerank = {page : v for page in corpus}
+    change = True
+
+    while change:
+        change = False
+
+        for page1 in pagerank:
+            v = 0
+
+            for page2 in pagerank:
+
+                if not corpus[page2]:
+                    v += pagerank[page2] / N
+                elif page1 in corpus[page2]:
+                    v += pagerank[page2] / len(corpus[page2])
+
+            v *= damping_factor
+            old_prob = pagerank[page1]
+            pagerank[page1] = b_prob + v
+
+            if abs(old_prob - pagerank[page1]) > 0.001:
+                change = True
+
+    return pagerank
 
 
 if __name__ == "__main__":
