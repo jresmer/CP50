@@ -101,7 +101,14 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+        if (tuple(state), action) not in self.q:
+
+            return 0
+        
+        else:
+            
+            return self.q[(tuple(state), action)]
+    
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -118,7 +125,8 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+        self.q[(tuple(state), action)] = old_q + self.alpha * (reward + future_rewards - old_q)
+    
 
     def best_future_reward(self, state):
         """
@@ -130,7 +138,20 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        actions = Nim.available_actions(state)
+
+        best_reward = 0
+
+        for action in actions:
+
+            reward = self.get_q_value(state, action)
+
+            if reward > best_reward:
+
+                best_reward = reward
+
+        return best_reward
+        
 
     def choose_action(self, state, epsilon=True):
         """
@@ -147,7 +168,27 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        actions = Nim.available_actions(state)        
+
+        if epsilon:
+
+            if random.random() <= self.epsilon:
+
+                return random.choice(list(actions))
+            
+        best_reward = -math.inf
+        best_action = None
+
+        for action in actions:
+
+            reward = self.get_q_value(state, action)
+
+            if reward > best_reward:
+
+                best_reward = reward
+                best_action = action
+
+        return best_action
 
 
 def train(n):
