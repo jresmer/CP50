@@ -58,7 +58,29 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+    images = []
+    labels = []
+
+    for i, k in enumerate(list(os.walk(data_dir))):
+
+        dir_path, _, file_names = k
+
+        for file_name in file_names:
+
+            path = os.path.join(dir_path, file_name)
+            
+            # reads image
+            image = cv2.imread(path)
+
+            # resizes image
+            image = cv2.resize(image, (IMG_WIDTH, IMG_HEIGHT))
+
+            # appends data to the lists
+            images.append(image)
+            labels.append(i)
+
+    return images, labels
+
 
 
 def get_model():
@@ -67,8 +89,43 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    # creates model
+    model = tf.keras.models.Sequential([
 
+        # Convolution layer
+        tf.keras.layers.Conv2D(16, (6, 6), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
+
+        # Pooling layer
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        # Second convolution layer
+        tf.keras.layers.Conv2D(16, (6, 6), activation="relu"),
+
+        # Second pooling layer
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        # Flatten units
+        tf.keras.layers.Flatten(),
+
+        # Hidden layer with dropout
+        tf.keras.layers.Dense(64, activation="relu"),
+        tf.keras.layers.Dropout(0.2),
+
+        # Second hidden layer with dropout
+        tf.keras.layers.Dense(32, activation="ralu"),
+        tf.keras.layers.Dropout(0.2),
+
+        # Output layer
+        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
+    ])
+
+    model.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    return model
 
 if __name__ == "__main__":
     main()
